@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153f35">
+  <title>SC Transportes — clientes e alunos</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">SC</span><span><strong>SC Transportes</strong><small>Gestão do transporte escolar</small></span></div>
+    <div id="headerActions" class="header-actions hidden">
+      <span id="userEmail" class="user-email"></span>
+      <button id="refreshButton" class="button light" type="button">Atualizar</button>
+      <button id="exportButton" class="button light" type="button">Exportar backup</button>
+      <button id="importButton" class="button light" type="button">Importar backup</button>
+      <button id="logoutButton" class="button light" type="button">Sair</button>
+      <input id="backupFile" class="hidden" type="file" accept="application/json,.json">
+    </div>
+  </header>
+
+  <main>
+    <section id="storageError" class="card storage-error hidden" role="alert">
+      <p class="eyebrow">Banco local</p><h1>O navegador não liberou o armazenamento</h1>
+      <p>Esta versão guarda os cadastros no IndexedDB do navegador. Abra este arquivo no Microsoft Edge ou Google Chrome atualizado e permita o armazenamento local. O programa não usa servidor nem serviço externo.</p>
+      <p id="storageErrorText" class="notice error"></p>
+    </section>
+
+    <section id="setupPanel" class="auth-layout hidden">
+      <div class="auth-intro"><p class="eyebrow">Primeiro acesso</p><h1>Crie a conta administrativa</h1><p>Esta conta será usada para abrir os cadastros salvos neste navegador.</p></div>
+      <section class="card auth-card"><h2>Administrador inicial</h2>
+        <form id="setupForm" class="form-stack">
+          <label class="field">E-mail<input name="email" type="email" maxlength="254" autocomplete="username" required></label>
+          <label class="field">Senha<input name="password" type="password" minlength="12" maxlength="200" autocomplete="new-password" required></label>
+          <label class="field">Confirme a senha<input name="confirmation" type="password" minlength="12" maxlength="200" autocomplete="new-password" required></label>
+          <button class="button primary full" type="submit">Criar administrador</button>
+        </form>
+        <div class="help-box">A senha cria um bloqueio local, mas não equivale à autenticação de um sistema hospedado. Os dados não são compartilhados com outros computadores.</div>
+      </section>
+    </section>
+
+    <section id="loginPanel" class="auth-layout hidden">
+      <div class="auth-intro"><p class="eyebrow">Área administrativa</p><h1>Cadastros organizados para o dia a dia</h1><p>Acesse para consultar e manter os dados de clientes responsáveis e alunos.</p></div>
+      <section class="card auth-card"><h2>Entrar</h2>
+        <form id="loginForm" class="form-stack">
+          <label class="field">E-mail<input name="email" type="email" maxlength="254" autocomplete="username" required></label>
+          <label class="field">Senha<input name="password" type="password" maxlength="200" autocomplete="current-password" required></label>
+          <button class="button primary full" type="submit">Entrar</button>
+        </form>
+        <div class="help-box">Os cadastros ficam no armazenamento local deste navegador. Use os backups para transferir ou guardar uma cópia.</div>
+      </section>
+    </section>
+
+    <section id="appPanel" class="hidden">
+      <section class="page-heading"><div><p class="eyebrow">Painel administrativo</p><h1>Clientes e alunos</h1><p>Consulte e mantenha os cadastros da empresa.</p></div></section>
+      <section class="metrics" aria-label="Resumo dos cadastros">
+        <article class="metric"><span>Clientes</span><strong id="totalClients">0</strong></article>
+        <article class="metric"><span>Clientes ativos</span><strong id="activeClients">0</strong></article>
+        <article class="metric"><span>Alunos</span><strong id="totalStudents">0</strong></article>
+        <article class="metric"><span>Alunos ativos</span><strong id="activeStudents">0</strong></article>
+      </section>
+      <div class="columns">
+        <section class="card list-card">
+          <div class="card-heading"><div><h2>Clientes</h2><p>Responsáveis que podem ser vinculados aos alunos.</p></div><button id="newClientButton" class="button primary" type="button">Novo cliente</button></div>
+          <form id="clientSearchForm" class="search-form"><label class="field">Buscar cliente<input name="query" type="search" placeholder="Nome, CPF, e-mail ou telefone"></label><button class="button light" type="submit">Buscar</button></form>
+          <div id="clientsList" class="record-list"></div><p class="footnote">A lista apresenta até 100 resultados. Use a busca para localizar um cadastro.</p>
+        </section>
+        <section class="card list-card">
+          <div class="card-heading"><div><h2>Alunos</h2><p>Vincule cada aluno ao cliente responsável.</p></div><button id="newStudentButton" class="button primary" type="button">Novo aluno</button></div>
+          <form id="studentSearchForm" class="search-form"><label class="field">Buscar aluno<input name="query" type="search" placeholder="Nome, responsável ou escola"></label><button class="button light" type="submit">Buscar</button></form>
+          <div id="studentsList" class="record-list"></div><p class="footnote">A lista apresenta até 100 resultados. Use a busca para localizar um cadastro.</p>
+        </section>
+      </div>
+      <p class="backup-note">Os dados ficam somente neste navegador. Exporte backups regularmente e guarde-os em local protegido.</p>
+    </section>
+  </main>
+
+  <dialog id="clientDialog">
+    <form id="clientForm" class="dialog-form">
+      <div class="dialog-heading"><h2 id="clientDialogTitle">Novo cliente</h2><button class="close-button" type="button" data-close="clientDialog" aria-label="Fechar">×</button></div>
+      <input name="id" type="hidden">
+      <label class="field">Nome completo<input name="name" type="text" minlength="2" maxlength="120" autocomplete="name" required></label>
+      <div class="form-grid"><label class="field">Telefone<input name="phone" type="tel" minlength="8" maxlength="20" autocomplete="tel" required></label><label class="field">CPF (opcional)<input name="cpf" type="text" maxlength="14" inputmode="numeric"></label></div>
+      <label class="field">E-mail (opcional)<input name="email" type="email" maxlength="254" autocomplete="email"></label>
+      <label id="clientStatusField" class="field hidden">Situação<select name="active"><option value="true">Ativo</option><option value="false">Inativo</option></select></label>
+      <div class="form-actions"><button class="button light" type="button" data-close="clientDialog">Cancelar</button><button class="button primary" type="submit">Salvar cliente</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="studentDialog">
+    <form id="studentForm" class="dialog-form">
+      <div class="dialog-heading"><h2 id="studentDialogTitle">Novo aluno</h2><button class="close-button" type="button" data-close="studentDialog" aria-label="Fechar">×</button></div>
+      <input name="id" type="hidden">
+      <label class="field">Nome completo<input name="name" type="text" minlength="2" maxlength="150" required></label>
+      <div class="form-grid"><label class="field">Data de nascimento (opcional)<input name="birthDate" type="date"></label><label class="field">CPF (opcional)<input name="cpf" type="text" maxlength="14" inputmode="numeric"></label></div>
+      <div class="form-grid"><label class="field">Turno<select name="shift" required><option value="MANHA">Manhã</option><option value="TARDE">Tarde</option><option value="INTEGRAL">Integral</option></select></label><label id="studentStatusField" class="field hidden">Situação<select name="status"><option value="ATIVO">Ativo</option><option value="SUSPENSO">Suspenso</option><option value="INATIVO">Inativo</option></select></label></div>
+      <label class="field">Cliente responsável<select name="guardianId" required></select></label>
+      <label class="field">Escola (opcional)<input name="school" type="text" maxlength="150"></label>
+      <label class="field">Endereço de embarque<input name="pickupAddress" type="text" minlength="3" maxlength="250" autocomplete="street-address" required></label>
+      <p id="studentStatusHelp" class="help-box">O novo cadastro será criado como ativo.</p>
+      <div class="form-actions"><button class="button light" type="button" data-close="studentDialog">Cancelar</button><button class="button primary" type="submit">Salvar aluno</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <footer class="footer">SC Transportes · Aplicação local de gerenciamento de clientes e alunos</footer>
+
+  <script defer src="./database.js"></script><script defer src="./app.js"></script>
+</body>
+</html>
